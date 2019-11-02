@@ -22,7 +22,9 @@ var UIController = (function(){ //Implementamos el módulo con una función invo
         inputType: '.add__type',
         inputDescription: '.add__description',
         inputValue: '.add__value',
-        inputBtn: '.add__btn'
+        inputBtn: '.add__btn',
+        incomeContainer: '.income__list',
+        expensesContainer: '.expenses__list'
     };
    
     return {
@@ -36,13 +38,15 @@ var UIController = (function(){ //Implementamos el módulo con una función invo
        
         addListItem: function(obj,type){
            
-            var html, newHtml;
+            var html, newHtml, element;
            
             //Creamos el HTML para meter en la UI
            
             if (type === 'inc'){
+                element = DOMstrings.incomeContainer;
                 html = '<div class="item clearfix" id="income-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
             }else if (type === 'exp'){
+                element = DOMstrings.expensesContainer;
                 html='<div class="item clearfix" id="expense-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
             }
            
@@ -50,12 +54,22 @@ var UIController = (function(){ //Implementamos el módulo con una función invo
            
             newHtml = html.replace('%id%',obj.id);
             newHtml = newHtml.replace('%description%',obj.description);
-            newHtml = newHtml.replace('%value',obj.value);
+            newHtml = newHtml.replace('%value%',obj.value);
            
             //Insertamos en el DOM
+            document.querySelector(element).insertAdjacentHTML('beforeend',newHtml);
+        },
+        
+        clearFields: function(){
+            var fields,fieldsArr;
+            fields = document.querySelectorAll(DOMstrings.inputDescription + ', ' + DOMstrings.inputValue); 
             
+            fieldsArr = Array.prototype.slice.call(fields);
+            fieldsArr.forEach(function(current,index,array){
+                current.value = "";
+            });
             
-            
+            fieldsArr[0].focus();
         },
        
         getDOMstrings: function(){
@@ -155,7 +169,12 @@ var controller = (function(budgetCtrl, UICtrl){  //Pasamos los 2 otros módulos 
         newItem = budgetCtrl.addItem(input.type, input.description, input.value);
        
         // Agregarlo a la vista de usuario
-       
+        UICtrl.addListItem(newItem,input.type);
+        
+        // Limpiamos los campos
+        UICtrl.clearFields();
+        
+        
         // Calcular el budget
        
         // Mostrar el budget
