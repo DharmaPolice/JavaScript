@@ -32,7 +32,7 @@ var UIController = (function(){ //Implementamos el módulo con una función invo
             return{
                     type: document.querySelector(DOMstrings.inputType).value, // Será 'inc' o 'exp'
                     description: document.querySelector(DOMstrings.inputDescription).value,
-                    value: document.querySelector(DOMstrings.inputValue).value
+                    value: parseFloat(document.querySelector(DOMstrings.inputValue).value)
             };
         },
        
@@ -95,6 +95,15 @@ var budgetController = (function(){
         this.description = description;
         this.value = value;
     };
+    
+    var calculateTotal = function(type){
+        var sum = 0;
+        data.allItems[type].forEach(function(cur){
+           sum = sum + cur.value;
+        });
+        
+        data.totals[type] = sum;
+    };
    
     var data = {
         allItems:{
@@ -104,7 +113,9 @@ var budgetController = (function(){
         totals:{
             exp:0,
             inc:0
-        }
+        },
+        budget: 0,
+        percentage: -1
     };
    
     
@@ -133,6 +144,35 @@ var budgetController = (function(){
             //Retornamos el nuevo item            
             return newItem;
         },
+        
+        calculateBudget: function(){
+            
+            // calculamos totales inc y exp
+                
+            calculateTotal('exp');
+            calculateTotal('inc');
+            
+            // calculamos budget = inc-exp
+            
+            data.budget = data.totals.inc - data.totals.exp;
+            
+            if (data.totals.inc > 0){
+            // calculamos % de inc gastado
+            data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
+            } else {
+                data.percentage = -1;
+            }
+        },
+        
+        getBudget: function(){
+          return {
+              budget: data.budget,
+              totalInc: data.totals.inc,
+              totalExp: data.totals.exp,
+              percentage: data.percentage
+          };  
+        },
+        
         testing: function(){
             console.log(data);
         }
@@ -158,26 +198,41 @@ var controller = (function(budgetCtrl, UICtrl){  //Pasamos los 2 otros módulos 
         });
     };
    
+    var updateBudget = function(){
+        
+        // Calcular el budget
+        budgetCtrl.calculateBudget();
+        
+        // Retornar el budget
+        var budget = budgetCtrl.getBudget();
+        
+        // Mostrar el budget en la UI
+        console.log(budget);
+    };
+    
     var ctrlAddItem = function (){
        
         var input, newItem;
        
         // Coger el valor de entrada
         input = UICtrl.getinput();
+        
+        if (input.description !=="" && !isNaN(input.value) && input.value > 0 ){
  
-        // Agregar el valor al budget
-        newItem = budgetCtrl.addItem(input.type, input.description, input.value);
-       
-        // Agregarlo a la vista de usuario
-        UICtrl.addListItem(newItem,input.type);
+            // Agregar el valor al budget
+            newItem = budgetCtrl.addItem(input.type, input.description, input.value);
+
+            // Agregarlo a la vista de usuario
+            UICtrl.addListItem(newItem,input.type);
+
+            // Limpiamos los campos
+            UICtrl.clearFields();
+
+            // Calculamos y updateamos budget
+            updateBudget();
         
-        // Limpiamos los campos
-        UICtrl.clearFields();
-        
-        
-        // Calcular el budget
-       
-        // Mostrar el budget
+        }
+
     };
    
     return{
